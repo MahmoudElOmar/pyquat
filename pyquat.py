@@ -129,7 +129,3 @@ class Quaternion:
         W = Quaternion(self.C) @ (V @ self)
         return np.array(W[1:])
 
-    def bRv(self,v):
-        return self.inverseRotateVector(v)
-    def vRb(self,v):
-        return self.rotateVector(v)
