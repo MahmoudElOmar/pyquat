@@ -13,11 +13,10 @@ class Quaternion:
         q1 = q[1]
         q2 = q[2]
         q3 = q[3]
-        return np.array([[q0, -q1, -q2, -q3],
+        return np.array([  [q0, -q1, -q2, -q3],
                            [q1, q0, -q3, q2],
                            [q2, q3, q0, -q1],
                            [q3, -q2, q1, q0]])
-
     """
     Returns Quaternion : the conjugate of the quaternion in question
     """
@@ -29,30 +28,29 @@ class Quaternion:
         q3 = q[3]
         return np.array([q0,-q1,-q2,-q3])
 
-    # vRb
-    def rotationMatrix(self):
-        q0 = self[0]
-        q1 = self[1]
-        q2 = self[2]
-        q3 = self[3]
+    """
+    Returns rotation matrix of quaternion.
+    """
+    @staticmethod
+    def rotationMatrix(q):
+        q0 = q[0]
+        q1 = q[1]
+        q2 = q[2]
+        q3 = q[3]
         R = np.zeros([3,3])
 
         R[0,0] = q0**2 + q1**2 - q2**2 - q3**2
-        R[0,1] = 2*(q1*q2 - q0*q3)
-        R[0,2] = 2*(q1*q3 + q0*q2)
-
         R[1,0] = 2*(q1*q2 + q0*q3)
-        R[1,1] = q0**2 - q1**2 + q2**2 - q3**2
-        R[1,2] = 2*(q2*q3 - q0*q1)
-
         R[2,0] = 2*(q1*q3 - q0*q2)
-        R[2,1] = 2*(q2*q3 + q0*q1)
-        R[2,2] = q0**2 - q1**2 - q2**2 + q3**2
 
+        R[0,1] = 2*(q1*q2 - q0*q3)
+        R[1,1] = q0**2 - q1**2 + q2**2 - q3**2
+        R[2,1] = 2*(q2*q3 + q0*q1)
+
+        R[0,2] = 2*(q1*q3 + q0*q2)
+        R[1,2] = 2*(q2*q3 - q0*q1)
+        R[2,2] = q0**2 - q1**2 - q2**2 + q3**2
         return R
-    # bRv
-    def inverseRotationMatrix(self):
-        return self.rotationMatrix().T
     """
     q : List_like object that contains 4 elements e.g. ndarray, list, or tupple
     """
@@ -116,16 +114,22 @@ class Quaternion:
     def inv(self):
         return Quaternion(self.C / (self.norm() ** 2))
 
-    def rotateVector(self, v):
-        if len(v) != 3:
-            raise Exception("Length of v should be 3. Not "+str(len(v)))
-        V = Quaternion([0,v[0],v[1],v[2]])
-        W = self @ (V @ Quaternion(self.C))
-        return np.array(W[1:])
-    def inverseRotateVector(self,v):
-        if len(v) != 3:
-            raise Exception("Length of v should be 3. Not "+str(len(v)))
-        V = Quaternion([0,v[0],v[1],v[2]])
-        W = Quaternion(self.C) @ (V @ self)
-        return np.array(W[1:])
+    """
+    Rotates vector, or any point in affine space, and expressing its image in a fixed reference frame
 
+    Input v: an array-like containing 3 elements representing the vector expressed in a fixed frame.
+    Returns: rotation of v in the fixed frame by the used quaternion.
+    """
+    def rotate(self,v):
+        if len(v) != 3:
+            raise ValueError("Vector v must have (3) elements. But it in reality, it had : ("+ str(len(v))+  ") elements")
+        
+        return self.R @ v
+    """
+    Transforms vector v to another reference frame, represented by quaternion q.
+    """
+    def transform(self,v):
+        if len(v) != 3:
+            raise ValueError("Vector v must have (3) elements. But it in reality, it had : ("+ str(len(v))+  ") elements")
+        
+        return self.R.T @ v        
